@@ -35,3 +35,34 @@ def get_vtk_plotter_cv_pv(pv_points, pv_vectors, cv_points, cv_vectors,
     vp = Plotter(bg="white")
     vp.add(plot_elements)
     return vp
+
+
+def get_vtk_plotter_ibs(trimesh_env, trimesh_obj, trimesh_ibs, src_cloud_env=None, src_cloud_obj=None):
+
+    trimesh_env.visual.face_colors = [200, 200, 200, 255]
+    vtk_env = trimesh2vtk(trimesh_env)
+    vtk_env.lighting("plastic")
+
+    trimesh_obj.visual.face_colors = [0, 250, 0, 255]
+    vtk_obj = trimesh2vtk(trimesh_obj)
+    vtk_obj.lighting("plastic")
+
+    trimesh_ibs.visual.face_colors = [0, 0, 200, 100]
+    vtk_ibs = trimesh2vtk(trimesh_ibs)
+    vtk_ibs.lighting("plastic")
+
+    plot_elements = [vtk_env, vtk_obj, vtk_ibs]
+
+    if src_cloud_env is not None:
+        vtk_src_cloud_env = Spheres(src_cloud_env, r=.007, c="blue", alpha=.9).lighting("plastic")
+        plot_elements.append(vtk_src_cloud_env)
+    if src_cloud_obj is not None:
+        vtk_cloud_obj = Spheres(src_cloud_obj, r=.007, c="blue", alpha=.9).lighting("plastic")
+        plot_elements.append(vtk_cloud_obj)
+
+    plot_elements = flatten(plot_elements)
+
+    vp = Plotter(bg="white")
+    vp.add(plot_elements)
+
+    return vp

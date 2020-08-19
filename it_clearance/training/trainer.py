@@ -1,9 +1,5 @@
 import numpy as np
-import sys
-from it_clearance.training.sampler import OnIBSPoissonDiscSamplerClearance
-from it import util
 from it.training.trainer import Trainer
-import trimesh
 
 
 class TrainerClearance(Trainer):
@@ -20,8 +16,8 @@ class TrainerClearance(Trainer):
         tri_mesh_ibs: IBS mesh
         tri_mesh_env: Environment mesh
         tri_mesh_obj: Object mesh
-        sampler: sample used to select provenance vectors
-        rate: The number of random
+        pv_sampler: sample used to select provenance vectors
+        cv_sampler: sampler used to select clearance vector
         """
         super().__init__(tri_mesh_ibs, tri_mesh_env, pv_sampler)
         self.cv_sampler = cv_sampler

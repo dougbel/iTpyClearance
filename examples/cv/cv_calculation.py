@@ -1,13 +1,14 @@
 import os
 import pandas as pd
+import trimesh
 
 from it.training.sampler import OnGivenPointCloudWeightedSampler
-from it_clearance.training.maxdistancescalculator import MaxDistancesCalculator
-from it_clearance.training.ibs import IBSMesh
-from it_clearance.training.sampler import *
+from it.training.ibs import IBSMesh
+from it_clearance.training.sampler import PropagateFromSpherePoissonDiscSamplerClearance
 from it_clearance.training.trainer import TrainerClearance
-# from it_clearance.training.agglomerator import Agglomerator
-# from it_clearance.training.saver import Saver
+import it.util as util
+import numpy as np
+import open3d as o3d
 
 from vtkplotter import Plotter, Spheres, load, Points, Lines, Arrows, trimesh2vtk
 
@@ -40,37 +41,36 @@ if __name__ == '__main__':
     ################################
     # GENERATING AND SEGMENTING IBS MESH
     ################################
-    influence_radio_ratio = 1.2
-    ibs_calculator = IBSMesh(ibs_init_size_sampling, ibs_resamplings)
-    ibs_calculator.execute(tri_mesh_env_segmented, tri_mesh_obj)
+    tri_mesh_ibs = trimesh.load_mesh(os.path.join(directory, interaction.iloc[0]['tri_mesh_ibs']))
+    o3d_cloud_src_ibs = o3d.io.read_point_cloud(os.path.join(directory, interaction.iloc[0]['o3d_cloud_sources_ibs']))
+    np_cloud_env = np.asarray(o3d_cloud_src_ibs.points)
 
-    tri_mesh_ibs = ibs_calculator.get_trimesh()
+    influence_radio_ratio = 1.2
 
     sphere_ro, sphere_center = util.influence_sphere(tri_mesh_obj, influence_radio_ratio)
     tri_mesh_ibs_segmented = util.slide_mesh_by_sphere(tri_mesh_ibs, sphere_center, sphere_ro)
-
-    np_cloud_env = ibs_calculator.points[: ibs_calculator.size_cloud_env]
 
     ################################
     # SAMPLING IBS MESH
     ################################
 
-    # sampler = PoissonDiscRandomSampler( sampler_rate_ibs_samples )
-    # sampler = PoissonDiscWeightedSampler( rate_ibs_samples=sampler_rate_ibs_samples,
+    # pv_sampler = PoissonDiscRandomSampler( sampler_rate_ibs_samples )
+    # pv_sampler = PoissonDiscWeightedSampler( rate_ibs_samples=sampler_rate_ibs_samples,
     #                                       rate_generated_random_numbers=sampler_rate_generated_random_numbers)
-    # sampler = OnVerticesRandomSampler()
-    # sampler = OnVerticesWeightedSampler( rate_generated_random_numbers=sampler_rate_generated_random_numbers )
-    # sampler = OnGivenPointCloudRandomSampler( np_input_cloud = np_cloud_env )
-    sampler = OnGivenPointCloudWeightedSampler(np_input_cloud=np_cloud_env,
-                                               rate_generated_random_numbers=sampler_rate_generated_random_numbers)
+    # pv_sampler = OnVerticesRandomSampler()
+    # pv_sampler = OnVerticesWeightedSampler( rate_generated_random_numbers=sampler_rate_generated_random_numbers )
+    # pv_sampler = OnGivenPointCloudRandomSampler( np_input_cloud = np_cloud_env )
+    pv_sampler = OnGivenPointCloudWeightedSampler(np_input_cloud=np_cloud_env,
+                                                  rate_generated_random_numbers=sampler_rate_generated_random_numbers)
 
     # cv_sampler = OnIBSPoissonDiscSamplerClearance()
     # cv_sampler = OnObjectPoissonDiscSamplerClearance()
     cv_sampler = PropagateFromSpherePoissonDiscSamplerClearance()
     trainer = TrainerClearance(tri_mesh_ibs=tri_mesh_ibs_segmented, tri_mesh_env=tri_mesh_env,
-                               tri_mesh_obj=tri_mesh_obj, pv_sampler=sampler, cv_sampler=cv_sampler)
+                               tri_mesh_obj=tri_mesh_obj, pv_sampler=pv_sampler, cv_sampler=cv_sampler)
 
     # VISUALIZATION
     plot = get_vtk_plotter_cv_pv(trainer.pv_points, trainer.pv_vectors, trainer.cv_points, trainer.cv_vectors,
                                  tri_mesh_env, tri_mesh_obj, tri_mesh_ibs_segmented)
+
     plot.show()

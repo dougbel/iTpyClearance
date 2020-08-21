@@ -4,7 +4,8 @@ import trimesh
 
 from it.training.sampler import OnGivenPointCloudWeightedSampler
 from it.training.ibs import IBSMesh
-from it_clearance.training.sampler import PropagateFromSpherePoissonDiscSamplerClearance
+from it_clearance.training.sampler import PropagateFromSpherePoissonDiscSamplerClearance, \
+    PropagateObjectNormalFromSpherePoissonDiscSamplerClearance, PropagateNormalObjectPoissonDiscSamplerClearance
 from it_clearance.training.trainer import TrainerClearance
 import it.util as util
 import numpy as np
@@ -65,7 +66,9 @@ if __name__ == '__main__':
 
     # cv_sampler = OnIBSPoissonDiscSamplerClearance()
     # cv_sampler = OnObjectPoissonDiscSamplerClearance()
-    cv_sampler = PropagateFromSpherePoissonDiscSamplerClearance()
+    # cv_sampler = PropagateFromSpherePoissonDiscSamplerClearance()
+    # cv_sampler = PropagateObjectNormalFromSpherePoissonDiscSamplerClearance()
+    cv_sampler = PropagateNormalObjectPoissonDiscSamplerClearance()
     trainer = TrainerClearance(tri_mesh_ibs=tri_mesh_ibs_segmented, tri_mesh_env=tri_mesh_env,
                                tri_mesh_obj=tri_mesh_obj, pv_sampler=pv_sampler, cv_sampler=cv_sampler)
 

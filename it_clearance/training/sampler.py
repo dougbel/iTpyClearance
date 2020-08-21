@@ -77,7 +77,7 @@ class OnObjectPoissonDiscSamplerClearance(SamplerClearance):
     """
     Generates provenance vectors by
     1) poisson disc sampling on object
-    2) finding the nearest point from OBJECT SAMPLES to IBS
+    2) finding the nearest point from OBJECT SAMPLES to ( IBS U Sphere_of_influence)
     """
     influence_radio_ratio = 1.2
 
@@ -104,6 +104,7 @@ class PropagateFromSpherePoissonDiscSamplerClearance(OnObjectPoissonDiscSamplerC
     1) sampling on a sphere of influence,
     2) generate rays from samples to the sphere centre
     3) find intersection of rays in object obtaining OBJECT SAMPLES
+        IF NO INTERSECTION: find the nearest point from "circle sample" to object
     4) finding nearest point from OBJECT SAMPLES to IBS
     """
     def __init__(self):
@@ -114,10 +115,17 @@ class PropagateFromSpherePoissonDiscSamplerClearance(OnObjectPoissonDiscSamplerC
         sphere = trimesh.primitives.Sphere(radius=sphere_ro, center=sphere_center)
         sphere_samples = util.sample_points_poisson_disk(sphere, self.SAMPLE_SIZE)
 
+        # find intersection with rays from the sphere of influence
         rays_to_center = sphere_center - sphere_samples
-
-        (__, __, np_src_cloud) = self.tri_mesh_obj.ray.intersects_id(
+        (__, index_ray, ray_collission_on_object) = self.tri_mesh_obj.ray.intersects_id(
                                                 ray_origins=sphere_samples, ray_directions=rays_to_center,
                                                 return_locations=True, multiple_hits=False)
+        np_src_cloud = np.empty((self.SAMPLE_SIZE, 3))
+        np_src_cloud[index_ray] = ray_collission_on_object
+
+        # no intersection, then uses the nearest point in object
+        no_index_ray = [i for i in range(self.SAMPLE_SIZE) if i not in index_ray]
+        (closest_in_obj, __, __) = self.tri_mesh_obj.nearest.on_surface(sphere_samples[no_index_ray])
+        np_src_cloud[no_index_ray] = closest_in_obj
 
         return np_src_cloud

@@ -2,10 +2,13 @@ import os
 
 import pandas as pd
 
-from it.training.sampler import OnGivenPointCloudWeightedSampler
 from it.training.ibs import IBSMesh
-from it_clearance.training.maxdistancescalculator import MaxDistancesCalculator
+from it.training.sampler import OnGivenPointCloudWeightedSampler
+from it.training.maxdistancescalculator import MaxDistancesCalculator
+
 from it_clearance.training.sampler import *
+from it_clearance.training.agglomerator import AgglomeratorClearance
+from it_clearance.training.saver import SaverClearance
 from it_clearance.training.trainer import TrainerClearance
 from vtkplotter import Plotter, Spheres, load, Points, Lines, Arrows, trimesh2vtk
 
@@ -61,23 +64,30 @@ if __name__ == '__main__':
     # pv_sampler = OnVerticesRandomSampler()
     # pv_sampler = OnVerticesWeightedSampler( rate_generated_random_numbers=sampler_rate_generated_random_numbers )
     # pv_sampler = OnGivenPointCloudRandomSampler( np_input_cloud = np_cloud_env )
-    sampler = OnGivenPointCloudWeightedSampler(np_input_cloud=np_cloud_env,
+    pv_sampler = OnGivenPointCloudWeightedSampler(np_input_cloud=np_cloud_env,
                                                rate_generated_random_numbers=sampler_rate_generated_random_numbers)
 
+    # cv_sampler = OnIBSPoissonDiscSamplerClearance()
+    # cv_sampler = OnObjectPoissonDiscSamplerClearance()
+    # cv_sampler = PropagateFromSpherePoissonDiscSamplerClearance()
+    # cv_sampler = PropagateObjectNormalFromSpherePoissonDiscSamplerClearance()
+    cv_sampler = PropagateNormalObjectPoissonDiscSamplerClearance()
     trainer = TrainerClearance(tri_mesh_ibs=tri_mesh_ibs_segmented, tri_mesh_env=tri_mesh_env,
-                               tri_mesh_obj=tri_mesh_obj, pv_sampler=sampler, rate=1)
+                               tri_mesh_obj=tri_mesh_obj, pv_sampler=pv_sampler, cv_sampler=cv_sampler)
 
-    # agglomerator = Agglomerator(trainer, num_orientations=8)
+    agglomerator = AgglomeratorClearance(trainer, num_orientations=8)
 
-    # max_distances = MaxDistancesCalculator(pv_points=trainer.pv_points, pv_vectors=trainer.pv_vectors,
-    #                                        tri_mesh_obj=tri_mesh_obj, consider_collision_with_object=True,
-    #                                        radio_ratio=influence_radio_ratio)
+    max_distances = MaxDistancesCalculator(pv_points=trainer.pv_points, pv_vectors=trainer.pv_vectors,
+                                            tri_mesh_obj=tri_mesh_obj, consider_collision_with_object=True,
+                                            radio_ratio=influence_radio_ratio)
 
     output_subdir = "IBSMesh_" + str(ibs_init_size_sampling) + "_" + str(ibs_resamplings) + "_"
-    output_subdir += sampler.__class__.__name__ + "_" + str(sampler_rate_ibs_samples) + "_"
-    output_subdir += str(sampler_rate_generated_random_numbers)
+    output_subdir += pv_sampler.__class__.__name__ + "_" + str(sampler_rate_ibs_samples) + "_"
+    output_subdir += str(sampler_rate_generated_random_numbers)+"_"
+    output_subdir += pv_sampler.__class__.__name__ + "_" + str(pv_sampler.SAMPLE_SIZE)
 
-    # Saver(affordance_name, env_name, obj_name, agglomerator, max_distances, ibs_calculator, tri_mesh_obj, output_subdir)
+    SaverClearance(affordance_name, env_name, obj_name, agglomerator,
+                   max_distances, ibs_calculator, tri_mesh_obj, output_subdir)
 
     # VISUALIZATION
     plot = get_vtk_plotter_cv_pv(trainer.pv_points, trainer.pv_vectors, trainer.cv_points, trainer.cv_vectors,

@@ -42,7 +42,7 @@ if __name__ == '__main__':
 
     pv_sampler = OnGivenPointCloudWeightedSampler(np_cloud_env, rate_generated_random_numbers)
 
-    cv_sampler = PropagateFromSpherePoissonDiscSamplerClearance()
+    cv_sampler = PropagateNormalObjectPoissonDiscSamplerClearance(sample_size=512)
     trainer = TrainerClearance(tri_mesh_ibs=tri_mesh_ibs_segmented, tri_mesh_env=tri_mesh_env,
                                tri_mesh_obj=tri_mesh_obj, pv_sampler=pv_sampler, cv_sampler=cv_sampler)
 
@@ -70,8 +70,11 @@ if __name__ == '__main__':
         clearance_vectors = Lines(cv_points, cv_points + cv_vectors, c='yellow', alpha=1).lighting("plastic")
         cv_from = Spheres(cv_points, r=.007, c="yellow", alpha=1).lighting("plastic")
 
-        vtk_obj.rotateZ(angle, rad=True)
-        vtk_env.rotateZ(angle, rad=True)
+        vtk_obj.rotateZ(angle*ori, rad=True)
+        vtk_env.rotateZ(angle*ori, rad=True)
 
         # VISUALIZATION
         vp.show([clearance_vectors, provenance_vectors, cv_from, vtk_env, vtk_obj])
+
+        vtk_obj.rotateZ(-angle * ori, rad=True)
+        vtk_env.rotateZ(-angle * ori, rad=True)

@@ -10,7 +10,7 @@ import it.util as util
 
 
 class SamplerClearance(ABC):
-    SAMPLE_SIZE = 256
+    sample_size = 256
 
     # input for sampling execution
     tri_mesh_ibs = None
@@ -25,7 +25,7 @@ class SamplerClearance(ABC):
     def __init__(self, sample_size=None):
         super().__init__()
         if sample_size is not None:
-            self.SAMPLE_SIZE = sample_size
+            self.sample_size = sample_size
 
     def execute(self, tri_mesh_ibs, tri_mesh_obj):
         """
@@ -55,7 +55,7 @@ class SamplerClearance(ABC):
     def get_info(self):
         info = {}
         info['sampler_clearance_name'] = self.__class__.__name__
-        info['sample_clearance_size'] = self.SAMPLE_SIZE
+        info['sample_clearance_size'] = self.sample_size
         return info
 
 
@@ -68,7 +68,7 @@ class OnIBSPoissonDiscSamplerClearance(SamplerClearance):
         super().__init__()
 
     def get_source_cloud(self):
-        return util.sample_points_poisson_disk(self.tri_mesh_ibs, self.SAMPLE_SIZE)
+        return util.sample_points_poisson_disk(self.tri_mesh_ibs, self.sample_size)
 
     def calculate_clearance_vectors(self):
         self.cv_points = self.np_src_cloud
@@ -86,7 +86,7 @@ class OnObjectPoissonDiscSamplerClearance(SamplerClearance):
     influence_radio_ratio = 1.2
 
     def get_source_cloud(self):
-        return util.sample_points_poisson_disk(self.tri_mesh_obj, self.SAMPLE_SIZE)
+        return util.sample_points_poisson_disk(self.tri_mesh_obj, self.sample_size)
 
     def calculate_clearance_vectors(self):
         sphere_ro, sphere_center = util.influence_sphere(self.tri_mesh_obj, self.influence_radio_ratio)
@@ -98,6 +98,10 @@ class OnObjectPoissonDiscSamplerClearance(SamplerClearance):
 
         self.cv_vectors = self.np_src_cloud - self.cv_points
 
+    def get_info(self):
+        info = super().get_info()
+        info['influence_radio_ratio'] = self.influence_radio_ratio
+        return info
 
 class PropagateFromSpherePoissonDiscSamplerClearance(OnObjectPoissonDiscSamplerClearance):
     """
@@ -113,18 +117,18 @@ class PropagateFromSpherePoissonDiscSamplerClearance(OnObjectPoissonDiscSamplerC
     def get_source_cloud(self):
         sphere_ro, sphere_center = util.influence_sphere(self.tri_mesh_obj, self.influence_radio_ratio)
         sphere = trimesh.primitives.Sphere(radius=sphere_ro, center=sphere_center)
-        sphere_samples = util.sample_points_poisson_disk(sphere, self.SAMPLE_SIZE)
+        sphere_samples = util.sample_points_poisson_disk(sphere, self.sample_size)
 
         # find intersection with rays from the sphere of influence
         rays_to_center = sphere_center - sphere_samples
         (__, index_ray, ray_collission_on_object) = self.tri_mesh_obj.ray.intersects_id(
             ray_origins=sphere_samples, ray_directions=rays_to_center,
             return_locations=True, multiple_hits=False)
-        self.np_src_cloud = np.empty((self.SAMPLE_SIZE, 3))
+        self.np_src_cloud = np.empty((self.sample_size, 3))
         self.np_src_cloud[index_ray] = ray_collission_on_object
 
         # no intersection, then uses the nearest point in object
-        no_index_ray = [i for i in range(self.SAMPLE_SIZE) if i not in index_ray]
+        no_index_ray = [i for i in range(self.sample_size) if i not in index_ray]
         (closest_in_obj, __, __) = self.tri_mesh_obj.nearest.on_surface(sphere_samples[no_index_ray])
         self.np_src_cloud[no_index_ray] = closest_in_obj
 
@@ -150,7 +154,7 @@ class PropagateObjectNormalFromSpherePoissonDiscSamplerClearance(SamplerClearanc
     def get_source_cloud(self):
         sphere_ro, sphere_center = util.influence_sphere(self.tri_mesh_obj, self.influence_radio_ratio)
         sphere = trimesh.primitives.Sphere(radius=sphere_ro, center=sphere_center)
-        sphere_samples = util.sample_points_poisson_disk(sphere, self.SAMPLE_SIZE)
+        sphere_samples = util.sample_points_poisson_disk(sphere, self.sample_size)
 
         # find intersection with rays from the sphere of influence
         rays_to_center = sphere_center - sphere_samples
@@ -158,14 +162,14 @@ class PropagateObjectNormalFromSpherePoissonDiscSamplerClearance(SamplerClearanc
             ray_origins=sphere_samples, ray_directions=rays_to_center,
             return_locations=True, multiple_hits=False)
         # initialize work variables
-        self.np_src_cloud = np.empty((self.SAMPLE_SIZE, 3))
-        self.np_src_cloud_normal_vector = np.empty((self.SAMPLE_SIZE, 3))
+        self.np_src_cloud = np.empty((self.sample_size, 3))
+        self.np_src_cloud_normal_vector = np.empty((self.sample_size, 3))
 
         self.np_src_cloud[index_ray] = collision_point_on_object
         self.np_src_cloud_normal_vector[index_ray] = self.tri_mesh_obj.face_normals[index_triangle]
 
         # no intersection, then uses the nearest point in object
-        no_index_ray = [i for i in range(self.SAMPLE_SIZE) if i not in index_ray]
+        no_index_ray = [i for i in range(self.sample_size) if i not in index_ray]
         (closest_in_obj, __, index_triangle) = self.tri_mesh_obj.nearest.on_surface(sphere_samples[no_index_ray])
         self.np_src_cloud[no_index_ray] = closest_in_obj
         self.np_src_cloud_normal_vector[no_index_ray] = self.tri_mesh_obj.face_normals[index_triangle]
@@ -201,6 +205,11 @@ class PropagateObjectNormalFromSpherePoissonDiscSamplerClearance(SamplerClearanc
 
         self.cv_vectors = self.np_src_cloud - self.cv_points
 
+    def get_info(self):
+        info = super().get_info()
+        info['influence_radio_ratio'] = self.influence_radio_ratio
+        info['distance_threshold'] = self.DISTANCE_THRESHOLD
+        return info
 
 class PropagateNormalObjectPoissonDiscSamplerClearance(PropagateObjectNormalFromSpherePoissonDiscSamplerClearance):
     """
@@ -214,7 +223,7 @@ class PropagateNormalObjectPoissonDiscSamplerClearance(PropagateObjectNormalFrom
 
 
     def get_source_cloud(self):
-        self.np_src_cloud = util.sample_points_poisson_disk(self.tri_mesh_obj, self.SAMPLE_SIZE)
+        self.np_src_cloud = util.sample_points_poisson_disk(self.tri_mesh_obj, self.sample_size)
 
         (closest_in_obj, __, index_triangle) = self.tri_mesh_obj.nearest.on_surface(self.np_src_cloud)
 

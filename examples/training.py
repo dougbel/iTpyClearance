@@ -84,7 +84,7 @@ if __name__ == '__main__':
     output_subdir = "IBSMesh_" + str(ibs_init_size_sampling) + "_" + str(ibs_resamplings) + "_"
     output_subdir += pv_sampler.__class__.__name__ + "_" + str(sampler_rate_ibs_samples) + "_"
     output_subdir += str(sampler_rate_generated_random_numbers)+"_"
-    output_subdir += cv_sampler.__class__.__name__ + "_" + str(cv_sampler.SAMPLE_SIZE)
+    output_subdir += cv_sampler.__class__.__name__ + "_" + str(cv_sampler.sample_size)
 
     SaverClearance(affordance_name, env_name, obj_name, agglomerator,
                    max_distances, ibs_calculator, tri_mesh_obj, output_subdir)

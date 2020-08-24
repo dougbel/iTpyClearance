@@ -40,6 +40,9 @@ class SaverClearance(Saver):
         pcd.points = o3d.utility.Vector3dVector(agglomerator.agglomerated_cv_vectors)
         o3d.io.write_point_cloud(file_name_pattern + "_clearance_vectors.pcd", pcd, write_ascii=True)
 
+        pcd.points = o3d.utility.Vector3dVector(agglomerator.agglomerated_cv_vdata)
+        o3d.io.write_point_cloud(file_name_pattern + "_clearance_vdata.pcd", pcd, write_ascii=True)
+
 
     def _save_info(self, affordance_name, env_name, obj_name, agglomerator, max_distances, ibs_calculator,
                    tri_mesh_obj):
@@ -47,7 +50,7 @@ class SaverClearance(Saver):
                 'affordance_name': affordance_name,
                 'env_name': env_name,
                 'obj_name': obj_name,
-                'sample_size': agglomerator.it_trainer.sampler.SAMPLE_SIZE,
+                # 'sample_size': agglomerator.it_trainer.sampler.SAMPLE_SIZE,
                 'orientations': agglomerator.ORIENTATIONS,
                 'trainer': agglomerator.it_trainer.get_info(),
                 'ibs_calculator': ibs_calculator.get_info(),

@@ -19,7 +19,7 @@ class AgglomeratorClearance(Agglomerator):
         agglomerated_cv_points = []
         agglomerated_cv_vectors = []
 
-        self.cv_sample_size = it_trainer.cv_points.shape[0]
+        self.sample_clearance_size = it_trainer.cv_points.shape[0]
 
         for angle in orientations:
             rotation = z_rotation(angle)

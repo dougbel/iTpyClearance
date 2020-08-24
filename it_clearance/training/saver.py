@@ -51,8 +51,7 @@ class SaverClearance(Saver):
                 'orientations': agglomerator.ORIENTATIONS,
                 'trainer': agglomerator.it_trainer.get_info(),
                 'ibs_calculator': ibs_calculator.get_info(),
-                'max_distances': max_distances.get_info(),
-                'num_clearance_vectors': agglomerator.it_trainer.cv_sampler.SAMPLE_SIZE}
+                'max_distances': max_distances.get_info()}
 
         with open(os.path.join(self.directory, affordance_name + '_' + obj_name + '.json'), 'w') as outfile:
             json.dump(data, outfile, indent=4)

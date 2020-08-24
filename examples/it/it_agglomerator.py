@@ -61,8 +61,8 @@ if __name__ == '__main__':
         pv_points = agg.agglomerated_pv_points[idx_from:idx_to]
         pv_vectors = agg.agglomerated_pv_vectors[idx_from:idx_to]
 
-        idx_from = ori * agg.cv_sample_size
-        idx_to = idx_from + agg.cv_sample_size
+        idx_from = ori * agg.sample_clearance_size
+        idx_to = idx_from + agg.sample_clearance_size
         cv_points = agg.agglomerated_cv_points[idx_from:idx_to]
         cv_vectors = agg.agglomerated_cv_vectors[idx_from:idx_to]
 

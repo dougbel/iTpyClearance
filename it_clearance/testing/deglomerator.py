@@ -24,4 +24,4 @@ class DeglomeratorClearance(Deglomerator):
         base_nameU = self.get_agglomerated_files_name_pattern()
         self.cv_points = np.asarray(o3d.io.read_point_cloud(base_nameU + "_clearance_points.pcd").points)
         self.cv_vectors = np.asarray(o3d.io.read_point_cloud(base_nameU + "_clearance_vectors.pcd").points)
-        self.cv_vectors_norms = np.asarray(o3d.io.read_point_cloud(base_nameU + "_clearance_vdata.pcd").points)[:, 0]
+        self.cv_vectors_norms = np.asarray(o3d.io.read_point_cloud(base_nameU + "_clearance_vdata.pcd").points)[:, 0].reshape(-1, 1)

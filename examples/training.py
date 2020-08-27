@@ -10,7 +10,7 @@ from it_clearance.training.sampler import *
 from it_clearance.training.agglomerator import AgglomeratorClearance
 from it_clearance.training.saver import SaverClearance
 from it_clearance.training.trainer import TrainerClearance
-from vtkplotter import Plotter, Spheres, load, Points, Lines, Arrows, trimesh2vtk
+from vedo import Plotter, Spheres, load, Points, Lines, Arrows, trimesh2vtk
 
 # from it_clearance.training.agglomerator import Agglomerator
 # from it_clearance.training.saver import Saver

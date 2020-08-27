@@ -1,6 +1,6 @@
 
-from vtkplotter import Lines, Spheres, trimesh2vtk, Plotter
-from vtkplotter.utils import flatten
+from vedo import Lines, Spheres, trimesh2vtk, Plotter
+from vedo.utils import flatten
 
 
 def get_vtk_plotter_cv_pv(pv_points, pv_vectors, cv_points, cv_vectors,

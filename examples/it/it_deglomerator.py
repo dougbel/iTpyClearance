@@ -4,7 +4,7 @@ import numpy as np
 
 import trimesh
 import os
-from vtkplotter import trimesh2vtk, Plotter, Lines, Spheres
+from vedo import trimesh2vtk, Plotter, Lines, Spheres
 
 from it_clearance.testing.deglomerator import DeglomeratorClearance
 

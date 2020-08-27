@@ -9,7 +9,7 @@ from scipy import linalg
 
 from transforms3d.derivations.eulerangles import z_rotation
 from transforms3d.affines import compose
-from vtkplotter import trimesh2vtk, Plotter, Lines, Spheres
+from vedo import trimesh2vtk, Plotter, Lines, Spheres
 
 from it.training.sampler import OnGivenPointCloudWeightedSampler
 from it_clearance.training.sampler import *

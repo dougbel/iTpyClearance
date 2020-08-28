@@ -9,6 +9,7 @@ from transforms3d.derivations.eulerangles import z_rotation
 from transforms3d.affines import compose
 
 from it_clearance.testing.tester import TesterClearance
+from it_clearance.utils import central_point_mesh
 
 
 def visual_comparison_of_trained_ibs_vs_ibs_on_point():
@@ -54,64 +55,71 @@ if __name__ == '__main__':
 
     tester = TesterClearance(working_directory, "./data/it/single_testing.json")
 
-    tri_mesh_env = trimesh.load_mesh('./data/it/gates400.ply', process=False)
-    testing_point = [-0.48689266781021423, -0.15363679409350514, 0.8177121144402457]
-    # testing_point = [-0.97178262, -0.96805501, 0.82738298] #in the edge of table, but with floor
-    # testing_point = [-2.8, 1., 0.00362764]  # half inside the scene, half outside
+    tri_mesh_env = trimesh.load_mesh('./data/it/scene0000_00_vh_clean.ply', process=False)
+
+    # testing_point = [3.73176694, 0.71387345, 0.53596354]  # touching wall collision with bed, angle 0
+    testing_point = [3.19380641, 4.94784451, 0.52105212]  # touching couch collision with many objects
+    # testing_point = [3.98721457, 2.82481766, 0.55264932]  # touching bed no collision, angle 0
 
     cv_analyzer = tester.get_analyzer_clearance(tri_mesh_env, testing_point)
-
-    for inter in range(tester.num_it_to_test):
-        print("interaction: ", tester.affordances[inter])
-        for ori in range(tester.num_orientations):
-            print("   orientation: ", ori,
-                  " possible collisions: ", cv_analyzer.results.resumed_smaller_norm_by_inter_and_ori[inter][ori],
-                  " percentage pos collisions: ", cv_analyzer.results.percentage_smaller_norm_by_inter_ori[inter][ori])
-
     pv_analyzer = tester.get_analyzer(tri_mesh_env, testing_point)
+    pv_analyzer.measure_scores()
 
-    angles_with_best_score = pv_analyzer.best_angle_by_distance_by_affordance()
-    all_distances, resumed_distances, missed = pv_analyzer.measure_scores()
+    inter = 0  # it only works with one interaction
+    print("interaction: ", tester.affordances[inter])
+    print("{:<12} {:<14} {:<16} {:<16} {:<16}".format("orientation", "cv collisions", "%cv collisions",
+                                                      "missing", "score"))
+    for ori in range(tester.num_orientations):
+        print("{:<12} {:<14} {:<16} {:<16} {:<16}".format(ori,
+                                                  cv_analyzer.results.resumed_smaller_norm_by_inter_and_ori[inter][ori],
+                                                  cv_analyzer.results.percentage_smaller_norm_by_inter_ori[inter][ori],
+                                                  pv_analyzer.results.missed[inter][ori],
+                                                  pv_analyzer.results.distances_summary[inter][ori]))
 
-    # as this is a run with only one affordance to test, only get the first row of results
-    first_affordance_scores = angles_with_best_score[0]
-    orientation = int(first_affordance_scores[0])
-    angle = first_affordance_scores[1]
-    score = first_affordance_scores[2]
-    missing = first_affordance_scores[3]
+    ordered_idxs_lowest_possible_collision = np.argsort(cv_analyzer.results.resumed_smaller_norm_by_inter_and_ori[inter])
 
-    print("score: " + str(score) + ", missing " + str(missing))
+    for ori in range(tester.num_orientations):
+        # analyses the first interaction (only one tested anyway)
+        # take orientation with lowest collision possibilities
+        orientation = ori
+        angle = (2 * math.pi / tester.num_orientations) * orientation
+        score = pv_analyzer.results.distances_summary[inter][ori]
+        missing = pv_analyzer.results.missed[inter][ori]
+        cv_collisions = cv_analyzer.results.resumed_smaller_norm_by_inter_and_ori[inter][ori]
 
-    affordance_name = tester.affordances[0][0]
-    affordance_object = tester.affordances[0][1]
-    tri_mesh_object_file = tester.objs_filenames[0]
-    influence_radius = tester.objs_influence_radios[0]
+        affordance_name = tester.affordances[0][0]
+        affordance_object = tester.affordances[0][1]
+        tri_mesh_object_file = tester.objs_filenames[0]
+        influence_radius = tester.objs_influence_radios[0]
 
-    # visualizing
-    tri_mesh_obj = trimesh.load_mesh(tri_mesh_object_file, process=False)
+        # visualizing
+        tri_mesh_obj = trimesh.load_mesh(tri_mesh_object_file, process=False)
 
-    idx_from = orientation * tester.num_pv
-    idx_to = idx_from + tester.num_pv
-    pv_begin = tester.compiled_pv_begin[idx_from:idx_to]
-    pv_direction = tester.compiled_pv_direction[idx_from:idx_to]
-    provenance_vectors = trimesh.load_path(np.hstack((pv_begin, pv_begin + pv_direction)).reshape(-1, 2, 3))
+        idx_from = orientation * tester.num_pv
+        idx_to = idx_from + tester.num_pv
+        pv_begin = tester.compiled_pv_begin[idx_from:idx_to]
+        pv_direction = tester.compiled_pv_direction[idx_from:idx_to]
+        provenance_vectors = trimesh.load_path(np.hstack((pv_begin, pv_begin + pv_direction)).reshape(-1, 2, 3))
 
-    pv_intersections = pv_analyzer.calculated_pvs_intersection(0, orientation)
+        pv_intersections = pv_analyzer.calculated_pvs_intersection(0, orientation)
 
-    R = z_rotation(angle)  # rotation matrix
-    Z = np.ones(3)  # zooms
-    T = testing_point
-    A = compose(T, R, Z)
-    tri_mesh_obj.apply_transform(A)
+        R = z_rotation(angle)  # rotation matrix
+        Z = np.ones(3)  # zooms
+        T = testing_point
+        A = compose(T, R, Z)
+        tri_mesh_obj.apply_transform(A)
 
-    tri_mesh_env.visual.face_colors = [100, 100, 100, 100]
-    tri_mesh_obj.visual.face_colors = [0, 255, 0, 100]
-    intersections = trimesh.points.PointCloud(pv_intersections, color=[0, 255, 255, 255])
+        tri_mesh_env.visual.face_colors = [100, 100, 100, 100]
+        tri_mesh_obj.visual.face_colors = [0, 255, 0, 100]
+        intersections = trimesh.points.PointCloud(pv_intersections, color=[0, 255, 255, 255])
 
-    sphere = trimesh.primitives.Sphere(radius=influence_radius, center=testing_point, subdivisions=4)
-    sphere.visual.face_colors = [100, 0, 0, 20]
+        obj_centre = central_point_mesh(tri_mesh_obj)
+        sphere = trimesh.primitives.Sphere(radius=influence_radius, center=obj_centre, subdivisions=4)
+        sphere.visual.face_colors = [100, 0, 0, 20]
 
-    scene = trimesh.Scene([provenance_vectors, intersections, tri_mesh_env, tri_mesh_obj, sphere])
-    scene.show()
-    # visual_comparison_of_trained_ibs_vs_ibs_on_point()
-    # tri_mesh_obj.apply_transform(linalg.inv(A))
+        scene = trimesh.Scene([provenance_vectors, intersections, tri_mesh_env, tri_mesh_obj, sphere])
+        caption = 'Ori ' + str(ori) + ", cv_collisions: " + str(cv_collisions)
+        caption += " ,score: " + str(score) + ", missing " + str(missing)
+        scene.show(caption=caption)
+        # visual_comparison_of_trained_ibs_vs_ibs_on_point()
+        # tri_mesh_obj.apply_transform(linalg.inv(A))

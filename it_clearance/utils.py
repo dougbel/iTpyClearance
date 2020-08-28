@@ -1,11 +1,17 @@
-
 from vedo import Lines, Spheres, trimesh2vtk, Plotter
 from vedo.utils import flatten
+import numpy as np
+
+
+def central_point_mesh(tri_mesh):
+    obj_min_bound = np.asarray(tri_mesh.vertices).min(axis=0)
+    obj_max_bound = np.asarray(tri_mesh.vertices).max(axis=0)
+    centre = np.asarray(obj_max_bound + obj_min_bound) / 2
+    return centre
 
 
 def get_vtk_plotter_cv_pv(pv_points, pv_vectors, cv_points, cv_vectors,
-                         trimesh_env=None, trimesh_obj=None, trimesh_ibs=None):
-
+                          trimesh_env=None, trimesh_obj=None, trimesh_ibs=None):
     clearance_vectors = Lines(cv_points, cv_points + cv_vectors, c='yellow', alpha=1).lighting("plastic")
     provenance_vectors = Lines(pv_points, pv_points + pv_vectors, c='red', alpha=1).lighting("plastic")
     cv_from = Spheres(cv_points, r=.007, c="yellow", alpha=1).lighting("plastic")
@@ -38,7 +44,6 @@ def get_vtk_plotter_cv_pv(pv_points, pv_vectors, cv_points, cv_vectors,
 
 
 def get_vtk_plotter_ibs(trimesh_env, trimesh_obj, trimesh_ibs, src_cloud_env=None, src_cloud_obj=None):
-
     trimesh_env.visual.face_colors = [200, 200, 200, 255]
     vtk_env = trimesh2vtk(trimesh_env)
     vtk_env.lighting("plastic")

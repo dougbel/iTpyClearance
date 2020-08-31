@@ -68,7 +68,7 @@ class OnIBSPoissonDiscSamplerClearance(SamplerClearance):
         super().__init__()
 
     def get_source_cloud(self):
-        return util.sample_points_poisson_disk(self.tri_mesh_ibs, self.sample_size)
+        self.np_src_cloud = util.sample_points_poisson_disk(self.tri_mesh_ibs, self.sample_size)
 
     def calculate_clearance_vectors(self):
         self.cv_points = self.np_src_cloud
@@ -86,7 +86,7 @@ class OnObjectPoissonDiscSamplerClearance(SamplerClearance):
     influence_radio_ratio = 1.2
 
     def get_source_cloud(self):
-        return util.sample_points_poisson_disk(self.tri_mesh_obj, self.sample_size)
+        self.np_src_cloud = util.sample_points_poisson_disk(self.tri_mesh_obj, self.sample_size)
 
     def calculate_clearance_vectors(self):
         sphere_ro, sphere_center = util.influence_sphere(self.tri_mesh_obj, self.influence_radio_ratio)
@@ -215,10 +215,10 @@ class PropagateNormalObjectPoissonDiscSamplerClearance(PropagateObjectNormalFrom
     """
     Generates clearance vectors by
     1) poisson sampling on object,
-    4) calculate normal for every sample in object
-    5) follow direction of normal until reaching IBS or the sphere of influence
-    6) starting point of clearance vector in the sampling normal direction no further than threshold or IBS
-    7) vector goes from IBS or a point farther than DISTANCE_THRESHOLD to the sampling point in object
+    2) calculate normal for every sample in object
+    3) follow direction of normal until reaching IBS or the sphere of influence
+    4) starting point of clearance vector in the sampling normal direction no further than threshold or IBS
+    5) vector goes from IBS or a point farther than DISTANCE_THRESHOLD to the sampling point in object
     """
 
 

@@ -5,7 +5,8 @@ import trimesh
 from it.training.sampler import OnGivenPointCloudWeightedSampler
 from it.training.ibs import IBSMesh
 from it_clearance.training.sampler import PropagateFromSpherePoissonDiscSamplerClearance, \
-    PropagateObjectNormalFromSpherePoissonDiscSamplerClearance, PropagateNormalObjectPoissonDiscSamplerClearance
+    PropagateObjectNormalFromSpherePoissonDiscSamplerClearance, PropagateNormalObjectPoissonDiscSamplerClearance, \
+    OnObjectPoissonDiscSamplerClearance, OnIBSPoissonDiscSamplerClearance
 from it_clearance.training.trainer import TrainerClearance
 import it.util as util
 import numpy as np

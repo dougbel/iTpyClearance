@@ -11,6 +11,8 @@ from it_clearance.testing.results import AnalyzerClearance
 
 class TesterClearance(Tester):
 
+    last_position_cv_tested = None
+
     compiled_cv_begin = None
     compiled_cv_direction = None
     compiled_cv_end = None
@@ -19,6 +21,7 @@ class TesterClearance(Tester):
 
     def __init__(self, path, file):
         super().__init__(path, file)
+        self.last_position_cv_tested = np.zeros(3)
 
     def read_json(self):
         super().read_json()
@@ -53,9 +56,10 @@ class TesterClearance(Tester):
         self.compiled_cv_end = self.compiled_cv_begin + self.compiled_cv_direction
 
     def get_analyzer_clearance(self, scene, position):
-        translation = np.asarray(position) - self.last_position
+        translation = np.asarray(position) - self.last_position_cv_tested
         self.compiled_cv_begin += translation
         self.compiled_cv_end += translation
+        self.last_position_cv_tested = position
         (__, idx_ray,
              intersections) = scene.ray.intersects_id(
                 ray_origins=self.compiled_cv_begin,

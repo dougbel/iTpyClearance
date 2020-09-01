@@ -25,6 +25,17 @@ class TesterClearance(Tester):
 
     def read_json(self):
         super().read_json()
+        self.num_cv = self.configuration_data['parameters']['num_cv']
+
+        increments = self.num_cv * self.num_orientations
+        amount_data = self.num_it_to_test * increments
+
+        self.compiled_cv_begin = np.empty((amount_data, 3))
+        self.compiled_cv_direction = np.empty((amount_data, 3))
+        self.compiled_cv_norms = np.empty(amount_data)
+
+        index1 = 0
+        index2 = increments
 
         for affordance in self.configuration_data['interactions']:
             sub_working_path = self.working_path + "/" + affordance['affordance_name']
@@ -34,16 +45,7 @@ class TesterClearance(Tester):
                 raise RuntimeError("Mismatched configured and trained num_orientations")
             if self.num_pv != it_descriptor.sample_size:
                 raise RuntimeError("Mismatched configured and trained num_pv")
-
-            if self.num_cv is None:
-                self.num_cv = it_descriptor.sample_clearance_size
-                increments = self.num_cv*self.num_orientations
-                index1 = 0
-                index2 = increments
-                self.compiled_cv_begin = np.empty((self.num_it_to_test*increments, 3))
-                self.compiled_cv_direction = np.empty(self.compiled_cv_begin.shape)
-                self.compiled_cv_norms = np.empty(self.compiled_cv_begin.shape[0])
-            elif self.num_cv != it_descriptor.sample_clearance_size:
+            if self.num_cv != it_descriptor.sample_clearance_size:
                 raise RuntimeError("Mismatched configured and trained num_cv")
 
             self.compiled_cv_begin[index1:index2] = it_descriptor.cv_points

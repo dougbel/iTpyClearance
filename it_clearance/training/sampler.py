@@ -147,9 +147,16 @@ class PropagateObjectNormalFromSpherePoissonDiscSamplerClearance(SamplerClearanc
     6) starting point of clearance vector in the sampling normal direction no further than threshold or IBS
     """
     influence_radio_ratio = 1.2
-    DISTANCE_THRESHOLD = 0.05
+    distance_threshold = 0.05
     # work variables
     np_src_cloud_normal_vector = np.array([])
+
+    def __init__(self, sample_size=None, distance_threshold=None):
+        super().__init__()
+        if sample_size is not None:
+            self.sample_size = sample_size
+        if distance_threshold is not None:
+            self.distance_threshold = distance_threshold
 
     def get_source_cloud(self):
         sphere_ro, sphere_center = util.influence_sphere(self.tri_mesh_obj, self.influence_radio_ratio)
@@ -192,7 +199,7 @@ class PropagateObjectNormalFromSpherePoissonDiscSamplerClearance(SamplerClearanc
         self.cv_points = np.zeros(locations.shape)
         self.cv_norms = np.zeros(norm_raw_cv.shape)
 
-        idx_less_equal_than = norm_raw_cv <= self.DISTANCE_THRESHOLD
+        idx_less_equal_than = norm_raw_cv <= self.distance_threshold
         idx_more_than = ~idx_less_equal_than
 
         # first assign all points in a SMALLER distance than the threshold
@@ -200,15 +207,15 @@ class PropagateObjectNormalFromSpherePoissonDiscSamplerClearance(SamplerClearanc
         self.cv_norms[idx_less_equal_than] = norm_raw_cv[idx_less_equal_than]
         # adjust points to BIGGER distance than threshold
         self.cv_points[idx_more_than] = self.np_src_cloud[idx_more_than] + (
-                    self.np_src_cloud_normal_vector[idx_more_than] * self.DISTANCE_THRESHOLD)
-        self.cv_norms[idx_more_than] = self.DISTANCE_THRESHOLD
+                    self.np_src_cloud_normal_vector[idx_more_than] * self.distance_threshold)
+        self.cv_norms[idx_more_than] = self.distance_threshold
 
         self.cv_vectors = self.np_src_cloud - self.cv_points
 
     def get_info(self):
         info = super().get_info()
         info['influence_radio_ratio'] = self.influence_radio_ratio
-        info['distance_threshold'] = self.DISTANCE_THRESHOLD
+        info['distance_threshold'] = self.distance_threshold
         return info
 
 class PropagateNormalObjectPoissonDiscSamplerClearance(PropagateObjectNormalFromSpherePoissonDiscSamplerClearance):
@@ -218,7 +225,7 @@ class PropagateNormalObjectPoissonDiscSamplerClearance(PropagateObjectNormalFrom
     2) calculate normal for every sample in object
     3) follow direction of normal until reaching IBS or the sphere of influence
     4) starting point of clearance vector in the sampling normal direction no further than threshold or IBS
-    5) vector goes from IBS or a point farther than DISTANCE_THRESHOLD to the sampling point in object
+    5) vector goes from IBS or a point farther than distance_threshold to the sampling point in object
     """
 
 

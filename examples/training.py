@@ -93,4 +93,10 @@ if __name__ == '__main__':
     plot = get_vtk_plotter_cv_pv(trainer.pv_points, trainer.pv_vectors, trainer.cv_points, trainer.cv_vectors,
                                  tri_mesh_env, tri_mesh_obj, tri_mesh_ibs_segmented)
 
+    from vedo.shapes import convexHull
+
+    ch = convexHull(trainer.cv_points).alpha(.1)
+
+    plot.actors.append(ch)
+
     plot.show()

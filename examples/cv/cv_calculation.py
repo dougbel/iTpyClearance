@@ -78,7 +78,7 @@ if __name__ == '__main__':
                                  tri_mesh_env, tri_mesh_obj, tri_mesh_ibs_segmented)
 
     from vedo.shapes import convexHull
-    ch = convexHull(trainer.cv_points).alpha(.3)
+    ch = convexHull(trainer.cv_points).alpha(.1)
 
     plot.actors.append(ch)
 

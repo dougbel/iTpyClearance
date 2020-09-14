@@ -13,8 +13,6 @@ from it_clearance.testing.tester import TesterClearance
 def on_left_click(mesh):
     global np_testing_point, vedo_testing_point
     if activated:
-        vcr = vtk.vtkCoordinate()
-        vcr.SetCoordinateSystemToDisplay()
         if vedo_testing_point is not None:
             vp.clear(vedo_testing_point)
         np_testing_point = mesh.picked3d
@@ -40,7 +38,8 @@ def on_key_press(key):
 def test_on_clicked_point():
     global tester, vedo_env, first_test
 
-    txt = Text2D("=== PROCESSING ===", pos=(.5, .8), s=3, c='darkred', font='ImpactLabel', justify='center')
+    txt = Text2D("=== PROCESSING ===", pos="bottom-left", s=1, c='darkred', bg="white",
+                 font='ImpactLabel', justify='center')
     vp.add(txt)
 
     cv_analyzer = tester.get_analyzer_clearance(tri_mesh_env, np_testing_point)
@@ -132,12 +131,12 @@ if __name__ == '__main__':
 
     tri_mesh_env = vtk2trimesh(vedo_env)
 
-    txt_enable = Text2D('Left click selection enabled ("c")', pos='bottom-left', c='steelblue', bg='lightseagreen',
-                        font='Calco', alpha=.8)
-    txt_disable = Text2D('Left click selection disabled ("c")', pos='bottom-left', c='darkred', bg='lightseagreen',
-                         font='Calco', alpha=.8)
+    txt_enable = Text2D('Left click selection enabled ("c")', pos='bottom-right', c='steelblue', bg='black',
+                        font='ImpactLabel', alpha=1)
+    txt_disable = Text2D('Left click selection disabled ("c")', pos='bottom-right', c='darkred', bg='black',
+                         font='ImpactLabel', alpha=1)
 
-    vp = Plotter(verbose=0, pos=(250, 0))
+    vp = Plotter(verbose=0, pos=(250, 0), size=(860,860))
     vp.mouseLeftClickFunction = on_left_click
     vp.keyPressFunction = on_key_press
     p = Points(np.zeros((tester.num_orientations, 3)), r=1, alpha=0, c='blue')

@@ -294,6 +294,7 @@ dependencies:
   - unixodbc=2.3.7=h14c3975_0
   - urllib3=1.24.2=py37_0
   - vedo=2020.3.4=pyh9f0ad1d_0
+  - vtk=8.2.0=py37haa4764d_200
   - wcwidth=0.1.7=py37_0
   - webencodings=0.5.1=py37_1
   - werkzeug=0.15.4=py_0
@@ -314,6 +315,5 @@ dependencies:
   - pip:
     - opencv-python==4.1.2.30
     - python-fcl==0.0.12
-    - vtk==8.1.2
-prefix: /home/dougbel/ExtraSoftware/anaconda3/envs/trimesh_vedo
+prefix: /home/apacheco/ExtraSoftware/anaconda3/envs/trimesh_vedo
 

@@ -1,18 +1,19 @@
-from si.scannet.datascannet import DataScanNet
+
 import trimesh
 import gc
 
 import numpy as np
 
 from sklearn.preprocessing import normalize
-from vedo import load, Plotter, Spheres, Lines
+from trimesh.sample import sample_surface_even
+from vedo import load, Plotter, Spheres, vtk2trimesh
+from it.util import sample_points_poisson_disk_radius, sample_points_poisson_disk, get_normal_nearest_point_in_mesh
 
 if __name__ == '__main__':
 
-    env_file = "./data/it/scene0000_00_vh_clean.ply"
-
-    ori_tri_mesh_env = trimesh.load_mesh(env_file)
-    ori_tri_mesh_env.visual.face_colors = [100, 100, 100, 255]
+    env_file = "./data/it/small_scene0000_00_vh_clean.ply"
+    vedo_env = load(env_file).c("gray").bc("t")#.fillHoles(1)
+    ori_tri_mesh_env = vtk2trimesh(vedo_env)
 
     if ori_tri_mesh_env.is_watertight:
         print("Watertight %s", env_file)
@@ -20,46 +21,83 @@ if __name__ == '__main__':
     spheres_radio = 0.01
     sphere_diameter = spheres_radio*2
 
-    inverted_vertex_normals = -ori_tri_mesh_env.vertex_normals
-    vertices = ori_tri_mesh_env.vertices
+    # #### using vertices of mesh
+    # seed_inverted_normals = -ori_tri_mesh_env.vertex_normals
+    # seed_points = ori_tri_mesh_env.vertices
+
+    # seed_points, seed_normals = sample_points_poisson_disk_radius(ori_tri_mesh_env, radius=free_ray_spheres_radio/2)
+    # seed_inverted_normals = -seed_normals
+
+    precursor_points, __ = sample_points_poisson_disk_radius(ori_tri_mesh_env, radius=spheres_radio/2)
+    seed_points = sample_points_poisson_disk(ori_tri_mesh_env, precursor_points.shape[0])
+    seed_normals = get_normal_nearest_point_in_mesh(ori_tri_mesh_env, seed_points)
+    seed_inverted_normals = -seed_normals
+
+    # seed_points, face_index = sample_surface_even(ori_tri_mesh_env, ori_tri_mesh_env.vertices.shape[0], radius=free_ray_spheres_radio/2)
+    # seed_inverted_normals = -ori_tri_mesh_env.face_normals[face_index]
 
     (index_triangle, index_ray, ray_collision_on_object) = ori_tri_mesh_env.ray.intersects_id(
-        ray_origins=vertices, ray_directions=inverted_vertex_normals,
+        ray_origins=seed_points, ray_directions=seed_inverted_normals,
         return_locations=True, multiple_hits=False)
 
-    ray_intersected_vects = ray_collision_on_object - vertices[index_ray]
+    # #### collided rays
+    ray_intersected_vects = ray_collision_on_object - seed_points[index_ray]
     ray_intersected_norms = np.linalg.norm(ray_intersected_vects, axis=1)
 
     index_ray_bigger_than_sphere_radio = index_ray[ray_intersected_norms > sphere_diameter]
 
     destino = ray_collision_on_object[ray_intersected_norms > sphere_diameter]
 
-    ray_intersected_than_sphere_radio_orig = vertices[index_ray_bigger_than_sphere_radio]
+    ray_intersected_than_sphere_radio_orig = seed_points[index_ray_bigger_than_sphere_radio]
     ray_intersected_than_sphere_radio_vects = destino - ray_intersected_than_sphere_radio_orig
     ray_intersected_than_sphere_radio_norms = np.linalg.norm(ray_intersected_than_sphere_radio_vects, axis=1)
     ray_intersected_than_sphere_radio_vects_normalized = normalize(ray_intersected_than_sphere_radio_vects)
 
     sphere_centres = ray_intersected_than_sphere_radio_orig + ray_intersected_than_sphere_radio_vects_normalized * spheres_radio
 
-    scene = load(env_file).c("gray")
-    sph = Spheres(sphere_centres, r=.01, c="blue", alpha=.9).lighting("plastic")
-    lines = Lines(ray_intersected_than_sphere_radio_orig, sphere_centres, c="blue")
+    sph_ray_collided = Spheres(sphere_centres, r=spheres_radio, c="blue", alpha=.9, res=2).lighting("plastic")
+    # lines = Lines(ray_intersected_than_sphere_radio_orig, sphere_centres, c="blue")
+
+    sph_ray_collided.cutWithMesh(vedo_env)
+
+
+    # ##### ##### ##### ##### ##### ##### ##### ##### ##### ##### ##### ##### ##### ##### ##### ##### ##### ##### #####
+    # ####  Section with rays no collided
+
+    free_ray_spheres_radio = 0.05
+
+    # seed_points, seed_normals = sample_points_poisson_disk_radius(ori_tri_mesh_env, radius=free_ray_spheres_radio/2)
+    # seed_inverted_normals = -seed_normals
+
+    precursor_points, __ = sample_points_poisson_disk_radius(ori_tri_mesh_env, radius=free_ray_spheres_radio/2)
+    seed_points = sample_points_poisson_disk(ori_tri_mesh_env, precursor_points.shape[0])
+    seed_normals = get_normal_nearest_point_in_mesh(ori_tri_mesh_env, seed_points)
+    seed_inverted_normals = -seed_normals
+
+    # seed_points, face_index = sample_surface_even(ori_tri_mesh_env, ori_tri_mesh_env.vertices.shape[0], radius=free_ray_spheres_radio/2)
+    # seed_inverted_normals = -ori_tri_mesh_env.face_normals[face_index]
+
+    (index_triangle, index_ray, ray_collision_on_object) = ori_tri_mesh_env.ray.intersects_id(
+        ray_origins=seed_points, ray_directions=seed_inverted_normals,
+        return_locations=True, multiple_hits=False)
+
+
+    index_ray_no_collided = [i for i in range(seed_points.shape[0]) if i not in index_ray]
+    ray_no_collided_vects_normalized = normalize(seed_inverted_normals[index_ray_no_collided])
+    ray_no_collided_vects_orig = seed_points[index_ray_no_collided]
+
+    sphere_centres = ray_no_collided_vects_orig + ray_no_collided_vects_normalized * free_ray_spheres_radio
+
+    sph_ray_no_collided = Spheres(sphere_centres, r=free_ray_spheres_radio, c="orange", alpha=.9, res=2).lighting("plastic")
+
+    sph_ray_no_collided.cutWithMesh(vedo_env)
+
+
 
     vp = Plotter(bg="white")
-    vp.add(sph)
-    vp.add(scene)
+    vp.add(sph_ray_no_collided)
+    vp.add(vedo_env)
+    vp.add(sph_ray_collided)
     vp.show()
 
-    index_ray_no_collided = [i for i in range(vertices.shape[0]) if i not in index_ray]
-
-
-
-    tri_mesh_env = trimesh.load_mesh(env_file)
-    tri_mesh_env.visual.face_colors = [255, 10, 10, 200]
-    tri_mesh_env.fill_holes()
-
-    if tri_mesh_env.is_watertight:
-        print("Watertight %s", env_file)
-
-    scene = trimesh.Scene([tri_mesh_env, tri_mesh_env])
-    scene.show()
+    print("he")

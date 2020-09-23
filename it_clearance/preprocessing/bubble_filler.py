@@ -7,11 +7,7 @@ from vedo import load, Plotter, Spheres, vtk2trimesh, write, merge, trimesh2vtk
 from it.util import sample_points_poisson_disk, get_normal_nearest_point_in_mesh
 import trimesh
 
-def calculate_average_distance_nearest_neighbour(points):
-    from sklearn.neighbors import NearestNeighbors
-    nbrs = NearestNeighbors(n_neighbors=2, algorithm='auto').fit(points)
-    distances, indices = nbrs.kneighbors(points)
-    return np.average(distances, axis=0)[1]
+from it_clearance.utils import calculate_average_distance_nearest_neighbour
 
 
 class BubbleFiller():
@@ -105,12 +101,6 @@ class BubbleFiller():
 
         return gross_bubbles  # , seed_points, Lines(vects_orig, sphere_centres, c=gross_bubbles.color())
 
-    def calculate_bubble_filler(self, fine_spheres_radio, gross_spheres_radio):
-
-        vedo_fine_spheres = self.calculate_fine_bubble_filler(fine_spheres_radio)
-        vedo_gross_spheres = self.calculate_gross_bubble_filler(gross_spheres_radio)
-
-        return vedo_gross_spheres, vedo_fine_spheres
 
     def calculate_floor_holes_filler(self, hole_filler_sphere_radio):
         logging.info("Calculating bounding box")
@@ -150,32 +140,3 @@ class BubbleFiller():
         hole_filler = merge(trimesh2vtk(tri_mesh_hole_filler), bubbles).color("green")
 
         return hole_filler
-
-
-if __name__ == '__main__':
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s')
-
-    env_file = "./data/it/scene0000_00_vh_clean.ply"
-
-    filler = BubbleFiller(env_file)
-    fine_bubbles = filler.calculate_fine_bubble_filler(0.03)
-    gross_bubbles = filler.calculate_gross_bubble_filler(0.07)
-    floor_filler = filler.calculate_floor_holes_filler(0.12)
-
-    # collision_tester = trimesh.collision.CollisionManager()
-    # collision_tester.add_object("environment", filler.tri_mesh_env)
-    vp = Plotter(bg="white")
-    vp.add(filler.vedo_env)
-    # vp.add(Points(seed_small_points,  c=fine_bubbles.c()))
-    vp.add(fine_bubbles)
-    # vp.add(Points(seed_gross_points, c=gross_bubbles.c()))
-    vp.add(gross_bubbles)
-
-    vp.add(floor_filler)
-
-    write(fine_bubbles, "./output/filler_fine_bubbles.ply")
-    write(gross_bubbles, "./output/filler_gross_bubbles.ply")
-    write(floor_filler, "./output/filler_floor_holes.ply")
-    write(merge(filler.vedo_env, gross_bubbles, floor_filler, ), "./output/filled_env.ply")
-
-    vp.show()

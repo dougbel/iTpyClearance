@@ -2,6 +2,11 @@ from vedo import Lines, Spheres, trimesh2vtk, Plotter
 from vedo.utils import flatten
 import numpy as np
 
+def calculate_average_distance_nearest_neighbour(points):
+    from sklearn.neighbors import NearestNeighbors
+    nbrs = NearestNeighbors(n_neighbors=2, algorithm='auto').fit(points)
+    distances, indices = nbrs.kneighbors(points)
+    return np.average(distances, axis=0)[1]
 
 def central_point_mesh(tri_mesh):
     obj_min_bound = np.asarray(tri_mesh.vertices).min(axis=0)

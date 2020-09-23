@@ -13,6 +13,6 @@ if __name__ == '__main__':
 
     # size = approximate limit to the size of the hole to be filled.
     b = a.clone().fillHoles(size=1)
-    b.color("red").legend("filled mesh")
+    b.color("red").legend("filled mesh").c("gray").bc("t")
     vp = Plotter(bg="white")
     vp.show(b,a)

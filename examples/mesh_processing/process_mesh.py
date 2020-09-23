@@ -17,9 +17,8 @@ def calculate_average_distance_nearest_neighbour(points):
 class BubbleFiller():
 
     def __init__(self, env_file):
-        self.vedo_env = load(env_file).c("gray").bc("t")
+        self.vedo_env = load(env_file).bc("t")
         self.tri_mesh_env = vtk2trimesh(self.vedo_env)
-
 
     def calculate_fine_bubble_filler(self, fine_spheres_radio):
         """
@@ -27,7 +26,9 @@ class BubbleFiller():
         """
         fine_sphere_diameter = fine_spheres_radio * 2
 
-        n_seed_points = int(self.tri_mesh_env.area / pow(2 * fine_spheres_radio / 3, 2))
+        logging.info("Sampling for FINE spheres")
+
+        n_seed_points = int(self.tri_mesh_env.area / pow(7 * fine_spheres_radio / 9, 2))
         seed_points = sample_points_poisson_disk(self.tri_mesh_env, n_seed_points)
         # avg_distance = calculate_average_distance_nearest_neighbour(seed_points)
         # logging.info(  "average distance nearest neighbour : " + str(avg_distance))
@@ -35,7 +36,7 @@ class BubbleFiller():
         seed_inverted_normals = -seed_normals
 
 
-        logging.info("Calculation ray intersections (FINE spheres)")
+        logging.info("Calculation ray intersections for FINE spheres")
         (__, collided_index_ray, collided_collision_point) = self.tri_mesh_env.ray.intersects_id(
             ray_origins=seed_points, ray_directions=seed_inverted_normals,
             return_locations=True, multiple_hits=False)
@@ -58,7 +59,7 @@ class BubbleFiller():
 
         fine_bubbles = Spheres(sphere_centres, r=fine_spheres_radio, c="blue", alpha=1, res=4).lighting("plastic")
 
-        logging.info("Polishing SMALL spheres")
+        logging.info("Polishing FINE spheres")
 
         fine_bubbles.cutWithMesh(self.vedo_env)
 
@@ -68,7 +69,7 @@ class BubbleFiller():
 
         gross_sphere_diameter = gross_spheres_radio*2
 
-        logging.info("Sampling for BIG radio")
+        logging.info("Sampling for GROSS spheres")
 
         n_seed_points = int(self.tri_mesh_env.area/pow(5*gross_spheres_radio/9, 2))
         seed_points = sample_points_poisson_disk(self.tri_mesh_env, n_seed_points)
@@ -77,7 +78,7 @@ class BubbleFiller():
         seed_normals = get_normal_nearest_point_in_mesh(self.tri_mesh_env, seed_points)
         seed_inverted_normals = -seed_normals
 
-        logging.info("Calculation ray intersections (BIG spheres)")
+        logging.info("Calculation ray intersections for GROSS spheres")
 
         (__, collided_index_ray, collided_collision_point) = self.tri_mesh_env.ray.intersects_id(
             ray_origins=seed_points, ray_directions=seed_inverted_normals,
@@ -112,6 +113,7 @@ class BubbleFiller():
         return vedo_gross_spheres, vedo_fine_spheres
 
     def calculate_floor_holes_filler(self, hole_filler_sphere_radio):
+        logging.info("Calculating bounding box")
         bb = self.tri_mesh_env.bounding_box_oriented
         old_idx = np.asarray(bb.vertices)[:, 2].argsort()[0:4]
         vertices = np.asarray(bb.vertices)[old_idx]
@@ -126,9 +128,7 @@ class BubbleFiller():
 
         tri_mesh_hole_filler = trimesh.Trimesh(vertices=vertices, faces=new_faces)
 
-        hole_filler_sphere_diameter = hole_filler_sphere_radio * 2
-
-        logging.info("Sampling for radio")
+        logging.info("Sampling on plane hole filler")
 
         n_seed_points = int(tri_mesh_hole_filler.area / pow(hole_filler_sphere_radio, 2))
         seed_points = sample_points_poisson_disk(tri_mesh_hole_filler, n_seed_points)
@@ -136,7 +136,7 @@ class BubbleFiller():
         # logging.info(  "average distance nearest neighbour : " + str(avg_distance))
         seed_normals = get_normal_nearest_point_in_mesh(tri_mesh_hole_filler, seed_points)
 
-        logging.info("Calculation spheres")
+        logging.info("Calculation floor hole spheres")
 
         vects_normalized = normalize(seed_normals)
         vects_orig = seed_points
@@ -145,13 +145,11 @@ class BubbleFiller():
 
         bubbles = Spheres(sphere_centres, r=hole_filler_sphere_radio, alpha=1, res=4).lighting("plastic")
 
-        logging.info("Polishing BIG spheres")
+        logging.info("Polishing floor hole spheres")
 
         hole_filler = merge(trimesh2vtk(tri_mesh_hole_filler), bubbles).color("green")
 
         return hole_filler
-
-
 
 
 if __name__ == '__main__':
@@ -162,7 +160,7 @@ if __name__ == '__main__':
     filler = BubbleFiller(env_file)
     fine_bubbles = filler.calculate_fine_bubble_filler(0.03)
     gross_bubbles = filler.calculate_gross_bubble_filler(0.07)
-    floor_filler = filler.calculate_floor_holes_filler(0.1)
+    floor_filler = filler.calculate_floor_holes_filler(0.12)
 
     # collision_tester = trimesh.collision.CollisionManager()
     # collision_tester.add_object("environment", filler.tri_mesh_env)
@@ -175,8 +173,9 @@ if __name__ == '__main__':
 
     vp.add(floor_filler)
 
-    # write(fine_bubbles, "./output/fine_bubbles.ply")
-    # write(gross_bubbles, "./output/gross_bubbles.ply")
-    # write(merge(filler.vedo_env, gross_bubbles, fine_bubbles), "./output/filled_env.ply")
+    write(fine_bubbles, "./output/filler_fine_bubbles.ply")
+    write(gross_bubbles, "./output/filler_gross_bubbles.ply")
+    write(floor_filler, "./output/filler_floor_holes.ply")
+    write(merge(filler.vedo_env, gross_bubbles, floor_filler, ), "./output/filled_env.ply")
 
     vp.show()

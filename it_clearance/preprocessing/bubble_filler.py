@@ -4,7 +4,7 @@ import numpy as np
 from sklearn.preprocessing import normalize
 from vedo import load, Plotter, Spheres, vtk2trimesh, write, merge, trimesh2vtk
 
-from it.util import sample_points_poisson_disk, get_normal_nearest_point_in_mesh
+from it.util import sample_points_poisson_disk, get_normal_nearest_point_in_mesh, sample_points_poisson_disk_radius
 import trimesh
 
 from it_clearance.utils import calculate_average_distance_nearest_neighbour
@@ -24,11 +24,14 @@ class BubbleFiller():
 
         logging.info("Sampling for FINE spheres")
 
-        n_seed_points = int(self.tri_mesh_env.area / pow(7 * fine_spheres_radio / 9, 2))
-        seed_points = sample_points_poisson_disk(self.tri_mesh_env, n_seed_points)
+        # n_seed_points = int(self.tri_mesh_env.area / pow(7 * fine_spheres_radio / 9, 2))
+        # seed_points = sample_points_poisson_disk(self.tri_mesh_env, n_seed_points)
+        seed_points, seed_normals = sample_points_poisson_disk_radius(self.tri_mesh_env,
+                                                                      radius=6*fine_spheres_radio/9,
+                                                                      best_choice_sampling=False)
         # avg_distance = calculate_average_distance_nearest_neighbour(seed_points)
         # logging.info(  "average distance nearest neighbour : " + str(avg_distance))
-        seed_normals = get_normal_nearest_point_in_mesh(self.tri_mesh_env, seed_points)
+        # seed_normals = get_normal_nearest_point_in_mesh(self.tri_mesh_env, seed_points)
         seed_inverted_normals = -seed_normals
 
 
@@ -67,11 +70,15 @@ class BubbleFiller():
 
         logging.info("Sampling for GROSS spheres")
 
-        n_seed_points = int(self.tri_mesh_env.area/pow(5*gross_spheres_radio/9, 2))
-        seed_points = sample_points_poisson_disk(self.tri_mesh_env, n_seed_points)
+        # n_seed_points = int(self.tri_mesh_env.area/pow(5*gross_spheres_radio/9, 2))
+        # seed_points = sample_points_poisson_disk(self.tri_mesh_env, n_seed_points)
         # avg_distance = calculate_average_distance_nearest_neighbour(seed_points)
         # logging.info(  "average distance nearest neighbour : " + str(avg_distance))
-        seed_normals = get_normal_nearest_point_in_mesh(self.tri_mesh_env, seed_points)
+        # seed_normals = get_normal_nearest_point_in_mesh(self.tri_mesh_env, seed_points)
+        seed_points, seed_normals = sample_points_poisson_disk_radius(self.tri_mesh_env,
+                                                                      radius=3 * gross_spheres_radio / 9,
+                                                                      best_choice_sampling=False,
+                                                                      use_geodesic_distance=False)
         seed_inverted_normals = -seed_normals
 
         logging.info("Calculation ray intersections for GROSS spheres")
@@ -120,11 +127,13 @@ class BubbleFiller():
 
         logging.info("Sampling on plane hole filler")
 
-        n_seed_points = int(tri_mesh_hole_filler.area / pow(hole_filler_sphere_radio, 2))
-        seed_points = sample_points_poisson_disk(tri_mesh_hole_filler, n_seed_points)
+        # n_seed_points = int(tri_mesh_hole_filler.area / pow(hole_filler_sphere_radio, 2))
+        # seed_points = sample_points_poisson_disk(tri_mesh_hole_filler, n_seed_points)
         # avg_distance = calculate_average_distance_nearest_neighbour(seed_points)
         # logging.info(  "average distance nearest neighbour : " + str(avg_distance))
-        seed_normals = get_normal_nearest_point_in_mesh(tri_mesh_hole_filler, seed_points)
+        # seed_normals = get_normal_nearest_point_in_mesh(tri_mesh_hole_filler, seed_points)
+        seed_points, seed_normals = sample_points_poisson_disk_radius(tri_mesh_hole_filler,
+                                                                      radius=2*hole_filler_sphere_radio/3)
 
         logging.info("Calculation floor hole spheres")
 

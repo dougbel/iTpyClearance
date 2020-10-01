@@ -1,13 +1,11 @@
 import logging
 
 import numpy as np
-from sklearn.preprocessing import normalize
-from vedo import load, Plotter, Spheres, vtk2trimesh, write, merge, trimesh2vtk
-
-from it.util import sample_points_poisson_disk, get_normal_nearest_point_in_mesh, sample_points_poisson_disk_radius
 import trimesh
+from sklearn.preprocessing import normalize
+from vedo import load, Spheres, vtk2trimesh, merge, trimesh2vtk
 
-from it_clearance.utils import calculate_average_distance_nearest_neighbour
+from it.util import sample_points_poisson_disk_radius
 
 
 class BubbleFiller():

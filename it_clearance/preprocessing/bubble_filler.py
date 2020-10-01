@@ -111,7 +111,7 @@ class BubbleFiller():
 
     def calculate_floor_holes_filler(self, hole_filler_sphere_radio):
         logging.info("Calculating bounding box")
-        bb = self.tri_mesh_env.bounding_box_oriented
+        bb = self.tri_mesh_env.bounding_box
         old_idx = np.asarray(bb.vertices)[:, 2].argsort()[0:4]
         vertices = np.asarray(bb.vertices)[old_idx]
         old_faces = [face for face in np.array(bb.faces) if

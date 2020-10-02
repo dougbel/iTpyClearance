@@ -11,7 +11,8 @@ from it_clearance.testing.tester import TesterClearance
 
 class EnviroTesterClearance(TesterClearance):
 
-    def start_full_test(self, environment, points_to_test, np_env_normals):
+    def start_full_test(self, environment, environment_filled, points_to_test, np_env_normals):
+
         full_data_frame = pd.DataFrame(columns=['interaction',
                                                 'point_x', 'point_y', 'point_z',
                                                 'point_nx', 'point_ny', 'point_nz', 'diff_ns',
@@ -53,7 +54,7 @@ class EnviroTesterClearance(TesterClearance):
                 else:
                     if pv_analyzer is None:
                         pv_analyzer = self.get_analyzer(environment, testing_point)
-                        cv_analyzer = self.get_analyzer_clearance(environment, testing_point)
+                        cv_analyzer = self.get_analyzer_clearance(environment_filled, testing_point)
                         pv_analyzer.measure_scores()
                     for orientation in range(self.num_orientations):
                         full_data_frame.loc[len(full_data_frame)] = [affordance,

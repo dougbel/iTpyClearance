@@ -42,7 +42,7 @@ def test_on_clicked_point():
                  font='ImpactLabel', justify='center')
     vp.add(txt)
 
-    cv_analyzer = tester.get_analyzer_clearance(tri_mesh_env, np_testing_point)
+    cv_analyzer = tester.get_analyzer_clearance(tri_mesh_env_filled, np_testing_point)
     pv_analyzer = tester.get_analyzer(tri_mesh_env, np_testing_point)
     pv_analyzer.measure_scores()
     inter = 0  # #################################################################### it ONLY works with one interaction
@@ -119,6 +119,7 @@ if __name__ == '__main__':
     working_directory = "./data/it/descriptors"
     config_file = "./data/it/single_testing.json"
     env_file = './data/it/scene0000_00_vh_clean.ply'
+    env_file_filled = './data/it/filled_scene0000_00_vh_clean.ply'
 
     max_score = 75.41
     min_score = 0
@@ -128,8 +129,10 @@ if __name__ == '__main__':
     tester = TesterClearance(working_directory, config_file)
 
     vedo_env = load(env_file).lighting("plastic")
+    vedo_env_filled = load(env_file_filled).lighting("plastic")
 
     tri_mesh_env = vtk2trimesh(vedo_env)
+    tri_mesh_env_filled = vtk2trimesh(vedo_env_filled)
 
     txt_enable = Text2D('Left click selection enabled ("c")', pos='bottom-right', c='steelblue', bg='black',
                         font='ImpactLabel', alpha=1)

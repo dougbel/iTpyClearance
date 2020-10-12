@@ -13,8 +13,10 @@ if __name__ == '__main__':
 
     testing_radius = 0.05
     env_file = './data/it/scene0000_00_vh_clean.ply'
+    env_file_filled = './data/scenes/filled_scene0000_00_vh_clean.ply'
 
     tri_mesh_env = trimesh.load_mesh(env_file)
+    tri_mesh_env_filled = trimesh.load_mesh(env_file_filled)
 
     start = time.time()  # timing execution
     np_test_points, np_env_normals = util.sample_points_poisson_disk_radius(tri_mesh_env, radius=testing_radius)
@@ -43,7 +45,7 @@ if __name__ == '__main__':
 
     start = time.time()  # timing execution
     # Testing iT
-    full_data_frame = tester.start_full_test(tri_mesh_env, np_test_points, np_env_normals)
+    full_data_frame = tester.start_full_test(tri_mesh_env, tri_mesh_env_filled, np_test_points, np_env_normals)
     end = time.time()  # timing execution
     time_exe = end - start
     print("Testing execution time: ", time_exe)

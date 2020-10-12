@@ -56,12 +56,13 @@ if __name__ == '__main__':
     tester = TesterClearance(working_directory, "./data/it/single_testing.json")
 
     tri_mesh_env = trimesh.load_mesh('./data/it/scene0000_00_vh_clean.ply', process=False)
+    tri_mesh_env_filled = trimesh.load_mesh('./data/it/filled_scene0000_00_vh_clean.ply', process=False)
 
     # testing_point = [3.73176694, 0.71387345, 0.53596354]  # touching wall collision with bed, angle 0
     testing_point = [3.19380641, 4.94784451, 0.52105212]  # touching couch collision with many objects
     # testing_point = [3.98721457, 2.82481766, 0.55264932]  # touching bed no collision, angle 0
 
-    cv_analyzer = tester.get_analyzer_clearance(tri_mesh_env, testing_point)
+    cv_analyzer = tester.get_analyzer_clearance(tri_mesh_env_filled, testing_point)
     pv_analyzer = tester.get_analyzer(tri_mesh_env, testing_point)
     pv_analyzer.measure_scores()
 

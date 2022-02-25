@@ -107,9 +107,23 @@ class BubbleFiller():
         return gross_bubbles  # , seed_points, Lines(vects_orig, sphere_centres, c=gross_bubbles.color())
 
 
-    def calculate_floor_holes_filler(self, hole_filler_sphere_radio):
+    def calculate_floor_holes_filler(self, hole_filler_sphere_radio, extension=.40):
+        """
+
+        :param hole_filler_sphere_radio:
+        :param extension: a gap to fill after the bounding box size
+        :return:
+        """
         logging.info("Calculating bounding box")
-        bb = self.tri_mesh_env.bounding_box
+        orig_bb = self.tri_mesh_env.bounding_box
+        transform = np.eye(4)
+        transform[:3, 3] = orig_bb.centroid
+        extents = orig_bb.extents + [extension*2, extension*2,0]
+
+        bb = trimesh.primitives.Box(transform=transform,
+                              extents=extents,
+                              mutable=False)
+
         old_idx = np.asarray(bb.vertices)[:, 2].argsort()[0:4]
         vertices = np.asarray(bb.vertices)[old_idx]
         old_faces = [face for face in np.array(bb.faces) if
